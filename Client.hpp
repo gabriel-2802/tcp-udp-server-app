@@ -150,7 +150,7 @@ class Client {
                         number /= 10;
                     }
 
-                    ss  << "FLOAT - " << (sign_f ? "-" : "") << fixed << setprecision(2) << number << '\n';
+                    ss  << "FLOAT - " << (sign_f ? "-" : "") << fixed << setprecision(power) << number << '\n';
                     break;
                 } case STRING: {
                     ss << "STRING - " << message.message.content << '\n';

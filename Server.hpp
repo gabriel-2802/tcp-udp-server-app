@@ -119,7 +119,8 @@ class Server {
             client_id.assign(buff);
             // check if client_id is already used
            if (db.is_client_online(client_id)) {
-                cout << "Client " << client_id.data() << " is online.\n";
+                // Client C1 already connected.
+                cout << "Client " << client_id.data() << " already connected.\n";
                 close(client_fd);
                 return;
             }
