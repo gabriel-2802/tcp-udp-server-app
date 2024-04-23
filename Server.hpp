@@ -1,6 +1,6 @@
 #include "utils.hpp"
 #include "DataBase.hpp"
-#define MAX_CONNECTIONS 4
+#define POLLS 100
 
 class Server {
     private:
@@ -32,7 +32,7 @@ class Server {
         }
 
         void run() {
-            DIE(listen(tcp_fd, MAX_CONNECTIONS) < 0, "listen");
+            DIE(listen(tcp_fd, POLLS) < 0, "listen");
             poll_fds.push_back({tcp_fd, POLLIN});
             poll_fds.push_back({udp_fd, POLLIN});
             poll_fds.push_back({stdio_fd, POLLIN});
@@ -240,6 +240,7 @@ class Server {
                 end_session = true;
             } else {
                 cerr << "Invalid command\n";
+                db.print_users_subscriptions();
             }
         }  
 };

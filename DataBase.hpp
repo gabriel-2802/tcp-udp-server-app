@@ -57,7 +57,7 @@ class DataBase {
                 }
 
                 for (auto& t : topics) {
-                    if (is_match(t, topic)) {
+                    if (is_match(topic, t)) {
                         result.insert(id);
                         break;
                     }

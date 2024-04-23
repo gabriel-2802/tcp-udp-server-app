@@ -97,7 +97,9 @@ class Client {
                 end_session = true;
                 return;
             } else {
-                cout << message << '\n';
+                stringstream ss;
+                ss << message;
+                cout << ss.str() << endl;
             }
         }
 
@@ -126,6 +128,10 @@ class Client {
                     uint32_t num;
                     memcpy(&num, message.message.content + 1, sizeof(uint32_t));
                     num = ntohl(num);
+                    if (num == 0) {
+                        ss << "INT - 0";
+                        break;
+                    }
 
                     ss << "INT - " << (sign ? "-" : "") << num;
                     break;
@@ -134,6 +140,10 @@ class Client {
                     memcpy(&short_real, message.message.content, sizeof(uint16_t));
                     short_real = ntohs(short_real);
                     double real = static_cast<double>(short_real) / 100.0;
+                    if (real == 0) {
+                        ss << "SHORT_REAL - 0.00";
+                        break;
+                    }
 
                     ss << "SHORT_REAL - " << fixed << setprecision(2) << real;
                     break;
@@ -145,12 +155,16 @@ class Client {
                     uint8_t power;
                     memcpy(&power, message.message.content + 5, sizeof(uint8_t));
 
-                    float number = static_cast<float>(num_f);
+                    double number = static_cast<double>(num_f);
                     for (int i = 0; i < power; i++) {
-                        number /= 10;
+                        number /= 10.0;
                     }
-
-                    ss  << "FLOAT - " << (sign_f ? "-" : "") << fixed << setprecision(power) << number;
+                    
+                    if (num_f == 0) {
+                        ss << "FLOAT - 0";
+                        break;
+                    }
+                    ss << "FLOAT - " << (sign_f ? "-" : "") << std::fixed << std::setprecision(power) << number;
                     break;
                 } case STRING: {
                     ss << "STRING - " << message.message.content;
