@@ -1,4 +1,4 @@
-#include "utils.hpp"
+#include "utils.h"
 
 
 class Client {
@@ -60,7 +60,8 @@ class Client {
             int rc = inet_pton(AF_INET, argv[2], &serv_addr.sin_addr.s_addr);
             DIE(rc <= 0, "inet_pton");
 
-            const int naggle_off = 1;  // Set to 1 to disable Nagle's algorithm
+             // Set to 1 to disable Nagle's algorithm
+            const int naggle_off = 1;
             DIE(setsockopt(socket_fd, IPPROTO_TCP, TCP_NODELAY, &naggle_off, sizeof(int)) < 0, "setsockopt TCP_NODELAY");
 
             // connect to server
@@ -104,10 +105,10 @@ class Client {
         }
 
         void receive_message() {
-            outgoing_udp_message message;
-            memset(&message, 0, sizeof(outgoing_udp_message));
+            update_message_t message;
+            memset(&message, 0, sizeof(update_message_t));
 
-            int rc = recv_all(socket_fd, &message, sizeof(outgoing_udp_message));
+            int rc = recv_all(socket_fd, &message, sizeof(update_message_t));
             DIE(rc < 0, "recv");
 
             if (rc == 0) {
@@ -118,7 +119,7 @@ class Client {
             }
         }
 
-        void print_message(outgoing_udp_message& message) {
+        void print_message(outgoing_udp_message_t& message) {
             stringstream ss;
             ss << message.ip << ":" << message.port << " - " << message.message.topic << " - ";
 

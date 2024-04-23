@@ -1,4 +1,4 @@
-#include "utils.hpp"
+#include "utils.h"
 #include "DataBase.hpp"
 #define POLLS 100
 
@@ -137,7 +137,7 @@ class Server {
 
 
         void handle_new_udp_connection() {
-            incoming_udp_message message;
+            incoming_udp_message_t message;
             memset(&message, 0, sizeof(message));
 
             sockaddr_in client_addr;
@@ -145,7 +145,7 @@ class Server {
             int rc = recvfrom(udp_fd, &message, sizeof(message), 0, (struct sockaddr *)&client_addr, &client_len);
             DIE(rc < 0, "recvfrom");
             
-            outgoing_udp_message forward_message;
+            outgoing_udp_message_t forward_message;
             memset(&forward_message, 0, sizeof(forward_message));
             memcpy(forward_message.message.topic, message.topic, sizeof(message.topic));
             forward_message.message.data_type = message.data_type;
@@ -156,7 +156,7 @@ class Server {
             send_topic_to_subscribers(forward_message);
         }
 
-        void send_topic_to_subscribers(outgoing_udp_message message) {
+        void send_topic_to_subscribers(outgoing_udp_message_t message) {
             topic_t topic = message.message.topic;
             set<socket_fd_t> subscribers = db.get_subscribers(topic);
 
