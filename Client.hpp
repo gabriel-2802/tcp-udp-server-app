@@ -127,7 +127,7 @@ class Client {
                     memcpy(&num, message.message.content + 1, sizeof(uint32_t));
                     num = ntohl(num);
 
-                    ss << "INT - " << (sign ? "-" : "") << num << '\n';
+                    ss << "INT - " << (sign ? "-" : "") << num;
                     break;
                 } case SHORT_REAL: {
                     uint16_t short_real;
@@ -135,7 +135,7 @@ class Client {
                     short_real = ntohs(short_real);
                     double real = static_cast<double>(short_real) / 100.0;
 
-                    cout << "SHORT_REAL - " << fixed << setprecision(2) << real << '\n';
+                    ss << "SHORT_REAL - " << fixed << setprecision(2) << real;
                     break;
                 } case FLOAT: {
                     uint8_t sign_f = message.message.content[0];
@@ -150,10 +150,10 @@ class Client {
                         number /= 10;
                     }
 
-                    ss  << "FLOAT - " << (sign_f ? "-" : "") << fixed << setprecision(power) << number << '\n';
+                    ss  << "FLOAT - " << (sign_f ? "-" : "") << fixed << setprecision(power) << number;
                     break;
                 } case STRING: {
-                    ss << "STRING - " << message.message.content << '\n';
+                    ss << "STRING - " << message.message.content;
                     break;
                 } default: {
                     cerr << "Invalid data type\n";
@@ -161,7 +161,7 @@ class Client {
                 }
             }
 
-            cout << ss.str();
+            cout << ss.str() << endl;
 
 
         }
