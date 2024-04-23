@@ -1,6 +1,5 @@
 #include "utils.h"
 
-
 class Client {
     private:
         port_t port;

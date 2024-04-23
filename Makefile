@@ -25,6 +25,9 @@ utils.o: utils.cpp utils.h
 	$(CC) $(CFLAGS) utils.cpp -o $@
 
 clean:
-	rm -f *.o $(EXE_SUBSCRIBER) $(EXE_SERVER)
+	rm -f *.o $(EXE_SUBSCRIBER) $(EXE_SERVER) *.zip
+
+zip:
+	zip 321CA_Carauleanu_Valentin_Gabriel_Tema2.zip *.cpp *.hpp *.h Makefile README.txt
 
 .PHONY: all clean

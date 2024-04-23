@@ -1,5 +1,7 @@
 #include "utils.h"
 
+// uses sets and unordered_maps to store data
+// they offer O(1) complexity for lookup, insert and delete operations
 class DataBase {
     public:
         // used to keep track of all clients and their subscriptions
@@ -51,11 +53,13 @@ class DataBase {
 
         set<socket_fd_t> get_subscribers(topic_t topic) {
             set<client_id_t> result;
+            // iterate through all clients
             for (auto& [id, topics] : client_subscriptions) {
                 if (!is_client_online(id)) {
                     continue;
                 }
 
+                // check if the topic matches any of the client's subscriptions
                 for (auto& t : topics) {
                     if (is_match(topic, t)) {
                         result.insert(id);
@@ -63,26 +67,12 @@ class DataBase {
                     }
                 }
             }
-
+            
             set<socket_fd_t> subscribers_fds;
             for (auto& id : result) {
                 subscribers_fds.insert(id_socket_clients[id]);
             }
 
             return subscribers_fds;
-        }
-
-        set<topic_t> get_subscriptions(client_id_t id) {
-            return client_subscriptions[id];
-        }
-
-        void print_users_subscriptions() {
-            for (auto& [id, topics] : client_subscriptions) {
-                cout << "Client " << id << " is subscribed to: ";
-                for (auto& t : topics) {
-                    cout << t << " ";
-                }
-                cout << endl;
-            }
         }
 };

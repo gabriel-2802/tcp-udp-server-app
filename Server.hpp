@@ -140,16 +140,20 @@ class Server {
             incoming_udp_message_t message;
             memset(&message, 0, sizeof(message));
 
+            // receive message from udp client
             sockaddr_in client_addr;
             socklen_t client_len = sizeof(client_addr);
             int rc = recvfrom(udp_fd, &message, sizeof(message), 0, (struct sockaddr *)&client_addr, &client_len);
             DIE(rc < 0, "recvfrom");
             
+            // forward message to subscribers
             outgoing_udp_message_t forward_message;
             memset(&forward_message, 0, sizeof(forward_message));
             memcpy(forward_message.message.topic, message.topic, sizeof(message.topic));
             forward_message.message.data_type = message.data_type;
             memcpy(forward_message.message.content, message.content, sizeof(message.content));
+            
+            // add source ip and port
             memcpy(forward_message.ip, inet_ntoa(client_addr.sin_addr), sizeof(forward_message.ip));
             forward_message.port = ntohs(client_addr.sin_port);
 
@@ -157,10 +161,11 @@ class Server {
         }
 
         void send_topic_to_subscribers(outgoing_udp_message_t message) {
+            // find subscribers for the topic
             topic_t topic = message.message.topic;
             set<socket_fd_t> subscribers = db.get_subscribers(topic);
 
-
+            // send message to subscribers
             for (auto& subscriber : subscribers) {
                 send_all(subscriber, &message, sizeof(message));
             }
@@ -174,9 +179,9 @@ class Server {
             int rc = recv(client.fd, &message, sizeof(message), 0);
             if (rc == 0) {
                 handle_client_disconnection(client);
-            } else if (strncmp(message, SUBSCRIBE, strlen(SUBSCRIBE)) == 0) {
+            } else if (!strncmp(message, SUBSCRIBE, strlen(SUBSCRIBE))) {
                 handle_subscribe(client, message + strlen(SUBSCRIBE));
-            } else if (strncmp(message, UNSUBSCRIBE, strlen(UNSUBSCRIBE)) == 0) {
+            } else if (!strncmp(message, UNSUBSCRIBE, strlen(UNSUBSCRIBE))) {
                 handle_unsubscribe(client, message + strlen(UNSUBSCRIBE));
             } else {
                 cerr << "Invalid command\n";
@@ -186,12 +191,16 @@ class Server {
         void handle_subscribe(pollfd client, message_t message) {
             replace_new_line(message, strlen(message));
 
+            // get topics from message as a vector
             vector<topic_t> topics = split(message, ' ');
+            // get client_id from socket
             client_id_t client_id = db.get_id_from_socket(client.fd);
+            // add topics to client subscriptions
             for (auto& topic : topics) {
                 db.add_subscription(client_id, topic);
             }
 
+            // send confirmation to client
             message_t response;
             memset(response, 0, sizeof(response));
             memcpy(response, SUBSCRIBE_REPLY, strlen(SUBSCRIBE_REPLY));
@@ -208,6 +217,7 @@ class Server {
                 db.remove_subscription(client_id, topic);
             }
 
+            // send confirmation to client
             message_t response;
             memset(response, 0, sizeof(response));
             memcpy(response, UNSUBSCRIBE_REPLY, strlen(UNSUBSCRIBE_REPLY));
@@ -240,7 +250,6 @@ class Server {
                 end_session = true;
             } else {
                 cerr << "Invalid command\n";
-                db.print_users_subscriptions();
             }
         }  
 };
