@@ -1,0 +1,14 @@
+[
+    {
+        "description": "topic {upb/precis/100/schedule/monday/8} - type {STRING} - value{Protocoale De Comunicatie}",
+        "payload_base64": "dXBiL3ByZWNpcy8xMDAvc2NoZWR1bGUvbW9uZGF5LzgAAAAAAAAAAAAAAAAAAAAAAAADUHJvdG9jb2FsZSBEZSBDb211bmljYXRpZQA="
+}, {
+        "description": "topic {upb/ec/100/schedule/tuesday/12} - type {STRING} - value{Protocoale De Comunicatie}",
+        "payload_base64": "dXBiL2VjLzEwMC9zY2hlZHVsZS90dWVzZGF5LzEyAAAAAAAAAAAAAAAAAAAAAAAAAAADUHJvdG9jb2FsZSBEZSBDb211bmljYXRpZQA="
+}, {
+        "description": "topic {upb/precis/100/schedule/monday/8} - type {STRING} - value{Protocoale De Comunicatie}",
+        "payload_base64": "dXBiL3ByZWNpcy8xMDAvc2NoZWR1bGUvbW9uZGF5LzgAAAAAAAAAAAAAAAAAAAAAAAADUHJvdG9jb2FsZSBEZSBDb211bmljYXRpZQA="
+}, {
+        "description": "topic {upb/ec/100/schedule/tuesday/12} - type {STRING} - value{Protocoale De Comunicatie}",
+        "payload_base64": "dXBiL2VjLzEwMC9zY2hlZHVsZS90dWVzZGF5LzEyAAAAAAAAAAAAAAAAAAAAAAAAAAADUHJvdG9jb2FsZSBEZSBDb211bmljYXRpZQA="
+}]
