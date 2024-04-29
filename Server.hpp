@@ -173,12 +173,15 @@ class Server {
         }
 
         void send_to_subscriber(socket_fd_t subscriber, outgoing_udp_message_t message) {
-            source_info_t source;
+            message_metadata_t source;
             memset(&source, 0, sizeof(source));
 
             memcpy(source.ip, message.ip, sizeof(source.ip));
             source.port = message.port;
+            memcpy(source.topic, message.message.topic, sizeof(source.topic));
+            source.data_type = message.message.data_type;
             send_all(subscriber, &source, sizeof(source));
+
         }
 
         void handle_data_from_client(pollfd client) {

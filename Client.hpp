@@ -116,18 +116,20 @@ class Client {
             // } else {
             //     print_message(message);
             // }
-            source_info_t source;
+            message_metadata_t source;
             stringstream ss;
 
-            int rc = recv_all(socket_fd, &source, sizeof(source_info_t));
+            int rc = recv_all(socket_fd, &source, sizeof(message_metadata_t));
             DIE(rc < 0, "recv");
 
+            // check if server disconnected
             if (rc == 0) {
                 end_session = true;
                 return;
             }
 
-            ss << source.ip << ":" << source.port << " - ";
+            ss << source.ip << ":" << source.port << " - " << source.topic << " - ";
+            
             cout << ss.str() << endl;
 
         }
