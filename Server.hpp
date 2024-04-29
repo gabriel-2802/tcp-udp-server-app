@@ -112,11 +112,13 @@ class Server {
             DIE(client_fd < 0, "accept");
 
             client_id_t client_id;
-            message_t buff;
-            memset((void *)buff, '\0', MAX_SIZE);
-            DIE(recv(client_fd, (void *)buff, MAX_ID, 0) < 0, "recv");
-            
+            size_t id_len;
+            DIE(recv_all(client_fd, &id_len, sizeof(size_t)) < 0, "recv");
+            char *buff = new char[id_len];
+            DIE(recv_all(client_fd, buff, id_len) < 0, "recv");
             client_id.assign(buff);
+            delete[] buff;
+            
             // check if client_id is already used
            if (db.is_client_online(client_id)) {
                 // Client C1 already connected.
@@ -207,23 +209,29 @@ class Server {
         }
 
         void handle_data_from_client(pollfd client) {
-            message_t message;
-            memset(message, 0, sizeof(message));
-        
-            // get message from client
-            int rc = recv(client.fd, &message, sizeof(message), 0);
-            if (rc == 0) {
+            size_t message_len;
+            int rc = recv_all(client.fd, &message_len, sizeof(size_t));
+            DIE(rc < 0, "recv");
+             if (rc == 0) {
                 handle_client_disconnection(client);
-            } else if (!strncmp(message, SUBSCRIBE, strlen(SUBSCRIBE))) {
+                return;
+            }
+
+            char *message = new char[message_len];
+            DIE(recv_all(client.fd, message, message_len) < 0, "recv");
+
+            if (!strncmp(message, SUBSCRIBE, strlen(SUBSCRIBE))) {
                 handle_subscribe(client, message + strlen(SUBSCRIBE));
             } else if (!strncmp(message, UNSUBSCRIBE, strlen(UNSUBSCRIBE))) {
                 handle_unsubscribe(client, message + strlen(UNSUBSCRIBE));
             } else {
                 cerr << "Invalid command\n";
             }
+
+            delete [] message;
         }
 
-        void handle_subscribe(pollfd client, message_t message) {
+        void handle_subscribe(pollfd client, char* message) {
             replace_new_line(message, strlen(message));
 
             // get topics from message as a vector
@@ -240,10 +248,17 @@ class Server {
             memset(response, 0, sizeof(response));
             memcpy(response, SUBSCRIBE_REPLY, strlen(SUBSCRIBE_REPLY));
             memcpy(response + strlen(SUBSCRIBE_REPLY), message, strlen(message));
-            send(client.fd, response, strlen(response), 0);
+           send_confirmation(client, response);
         }
 
-        void handle_unsubscribe(pollfd client, message_t message) {
+        void send_confirmation(pollfd client, char* message) {
+            size_t message_len = strlen(message) + 1;
+            DIE(send_all(client.fd, &message_len, sizeof(size_t)) < 0, "send");
+            DIE(send_all(client.fd, message, message_len) < 0, "send");
+
+        }
+
+        void handle_unsubscribe(pollfd client, char* message) {
             replace_new_line(message, strlen(message));
 
             vector<topic_t> topics = split(message, ' ');
@@ -257,7 +272,7 @@ class Server {
             memset(response, 0, sizeof(response));
             memcpy(response, UNSUBSCRIBE_REPLY, strlen(UNSUBSCRIBE_REPLY));
             memcpy(response + strlen(UNSUBSCRIBE_REPLY), message, strlen(message));
-            send(client.fd, response, strlen(response), 0);
+            send_confirmation(client, response);
         }
 
         void handle_client_disconnection(pollfd client) {

@@ -56,19 +56,19 @@ class Client {
             memset(&serv_addr, 0, socket_len);
             serv_addr.sin_family = AF_INET;
             serv_addr.sin_port = htons(port);
-            int rc = inet_pton(AF_INET, argv[2], &serv_addr.sin_addr.s_addr);
-            DIE(rc <= 0, "inet_pton");
+            DIE(inet_pton(AF_INET, argv[2], &serv_addr.sin_addr.s_addr) < 0, "inet_pton");
 
              // Set to 1 to disable Nagle's algorithm
             const int naggle_off = 1;
             DIE(setsockopt(socket_fd, IPPROTO_TCP, TCP_NODELAY, &naggle_off, sizeof(int)) < 0, "setsockopt TCP_NODELAY");
 
             // connect to server
-            rc = connect(socket_fd, (struct sockaddr *)&serv_addr, sizeof(serv_addr));
-            DIE(rc < 0, "connect");
+            DIE(connect(socket_fd, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0, "connect");
 
             // send the id to the server
-            send(socket_fd, id.data(), strlen(id.data()), 0);
+            size_t id_len = strlen(id.data()) + 1;
+            DIE(send_all(socket_fd, &id_len, sizeof(size_t)) < 0, "send");
+            DIE(send_all(socket_fd, id.data(), id_len) < 0, "send");
         }
 
         void send_message() {
@@ -79,7 +79,9 @@ class Client {
             if (!strncmp(message, EXIT, strlen(EXIT))) {
                 end_session = true;
             } else if (!strncmp(message, SUBSCRIBE, strlen(SUBSCRIBE)) || !strncmp(message, UNSUBSCRIBE, strlen(UNSUBSCRIBE))) {
-                send(socket_fd, message, strlen(message), 0);
+                size_t message_len = strlen(message) + 1;
+                DIE(send_all(socket_fd, &message_len, sizeof(size_t)) < 0, "send");
+                DIE(send_all(socket_fd, message, message_len) < 0, "send");
                 receive_confirmation();
             } else {
                 cerr << "Invalid command\n";
@@ -87,20 +89,22 @@ class Client {
         }
 
         void receive_confirmation() {
-            message_t message;
-            memset(message, 0, sizeof(message_t));
-
-            int rc = recv(socket_fd, message, sizeof(message_t), 0);
+            size_t message_len;
+            
+            int rc = recv_all(socket_fd, &message_len, sizeof(size_t));
             DIE(rc < 0, "recv");
 
             if (rc == 0) {
                 end_session = true;
                 return;
-            } else {
-                stringstream ss;
-                ss << message;
-                cout << ss.str() << endl;
             }
+
+            char *message = new char[message_len];
+            DIE(recv_all(socket_fd, message, message_len) < 0, "recv");
+            stringstream ss;
+            ss << message;
+            cout << ss.str() << endl;
+            delete [] message;
         }
 
         void receive_message() {
