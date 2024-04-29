@@ -28,14 +28,14 @@ int send_all(int sockfd, void *buffer, size_t len) {
     while (bytes_remaining > 0) {
         bytes_sent = send(sockfd, buff, bytes_remaining, 0);
         if (bytes_sent < 0) {
-            return -1;  // Socket error, could potentially handle EAGAIN/EWOULDBLOCK for non-blocking sockets
+            return -1; 
         }
 
         bytes_remaining -= bytes_sent;
         buff += bytes_sent;
     }
 
-    return len;  // Return the total number of bytes sent
+    return len;  
 }
 
 vector<string> split(string str, char delimiter) {
@@ -51,6 +51,7 @@ vector<string> split(string str, char delimiter) {
         
 }
 
+/* inspired from this https://leetcode.com/problems/wildcard-matching/solutions/4686045/simple-iterative-tabular-dp-solution/ */
 bool is_match(string s, string p) {
     vector<string> path = split(s, '/');
     vector<string> pattern = split(p, '/');

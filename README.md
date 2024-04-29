@@ -1,4 +1,4 @@
-## TCP-UDP Server Architecture Overview
+## TCP-UDP Server Overview
 
 ### Structure Overview
 - **Client.hpp**: Defines the client class.
@@ -41,14 +41,15 @@ The basis of the implementation is the 7th laboratory tasks.
 
 #### 4. **Communication Protocol**
 - **Structured Communication**:
-    - Upon connection, the client sends its ID (up to 15 characters) to the server.
-    - The server validates the client and confirms the connection.
-    - Clients issue commands (EXIT, SUBSCRIBE, UNSUBSCRIBE) which are acknowledged by the server;
-    the size of the command will not surpass `MTU`.
+    - Upon connection, the client sends the server the size of its ID, followed by the ID itself.
+    - The server validates the client and confirms the connection to STDOUT
+    - Clients issue commands (EXIT, SUBSCRIBE, UNSUBSCRIBE) which are acknowledged by the server; before each message, the client sends the size of the message to the server to ensure the server receives the message in its entirety.
+    - the servers acknowledge the message by sending a confirmation message to the client, preceded by the size of the message.
 - **Message Forwarding**:
     - Server forwards topic-based messages to subscribed clients.
-    - Ensures message reliability through predefined struct sizes:
-        - `incoming_udp_message_t` for incoming  UDP client messages
-        - `outgoing_udp_message_t` for outgoing server messages to TCP clients
-    - topic messages are sent using the `outgoing_udp_message_t` struct by the server, whereas the client expects exactly `sizeof(outgoing_udp_message_t)` bytes.
+    - the server receives `incoming_udp_message_t` messages from the UDP socket and forwards them to the relevant TCP clients.
+    - the forwarding process is executed according to a predefined format:
+        - the servers sends sizeof(`message_metadata_t`) bytes containing the udp client's information, the topic, the data type and size of the message.
+        - the server sends the message itself to the client.
 - This ensures the messages are sent and received correctly, preventing buffer overflows and data loss or data corruption.
+- Moreover, the method of sending the message size before the message itself ensures that the message is received correctly and in its entirety by the receiving party.

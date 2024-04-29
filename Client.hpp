@@ -72,9 +72,9 @@ class Client {
         }
 
         void send_message() {
-            message_t message;
-            memset(message, 0, sizeof(message_t));
-            fgets(message, sizeof(message_t), stdin);
+            buffer_t message;
+            memset(message, 0, sizeof(buffer_t));
+            fgets(message, sizeof(buffer_t), stdin);
 
             if (!strncmp(message, EXIT, strlen(EXIT))) {
                 end_session = true;
@@ -122,11 +122,8 @@ class Client {
 
             ss << source.ip << ":" << source.port << " - " << source.topic << " - ";
 
-            size_t data_size;
-            DIE(recv_all(socket_fd, &data_size, sizeof(size_t)) < 0, "recv");
-
-            char *content = new char[data_size];
-            DIE(recv_all(socket_fd, content, data_size) < 0, "recv");
+            char *content = new char[source.data_size];
+            DIE(recv_all(socket_fd, content, source.data_size) < 0, "recv");
             decode_content(content, ss, source.data_type);
            
             cout << ss.str() << endl;
@@ -188,9 +185,4 @@ class Client {
                 }
             }
         }
-
-
-    
-    
-
 };

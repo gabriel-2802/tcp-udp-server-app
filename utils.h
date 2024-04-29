@@ -48,7 +48,7 @@ typedef uint16_t port_t;
 typedef int socket_fd_t;
 typedef string client_id_t;
 typedef string topic_t;
-typedef char message_t[MAX_SIZE];
+typedef char buffer_t[MAX_SIZE];
 typedef char ip_address_t[MAX_IP_SIZE];
 
 enum DataType : uint8_t {
@@ -66,22 +66,19 @@ struct __attribute__((__packed__)) incoming_udp_message_t {
 };
 
 // avoid padding in struct
-struct __attribute__((__packed__)) outgoing_udp_message_t {
-    ip_address_t ip;
-    port_t port;
-    incoming_udp_message_t message;
+struct __attribute__((__packed__)) message_metadata_t {
+	ip_address_t ip; // ip of the sender
+	port_t port; // port of the sender
+	char topic[50]; // topic of the message
+	uint8_t data_type; // data type of the message
+	size_t data_size; // size of the message
 };
 
-struct __attribute__((__packed__)) message_metadata_t {
+struct message_information_t {
 	ip_address_t ip;
 	port_t port;
-	char topic[50];
-	uint8_t data_type;
+	incoming_udp_message_t message;
 };
-
-// for the server, the message it outgoing
-// for the client, the message is incoming as an update to a topic
-typedef outgoing_udp_message_t update_message_t;
 
 int recv_all(int sockfd, void *buffer, size_t len);
 

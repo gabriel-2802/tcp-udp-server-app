@@ -149,7 +149,7 @@ class Server {
             DIE(rc < 0, "recvfrom");
             
             // forward message to subscribers
-            outgoing_udp_message_t forward_message;
+            message_information_t forward_message;
             memset(&forward_message, 0, sizeof(forward_message));
             memcpy(forward_message.message.topic, message.topic, sizeof(message.topic));
             forward_message.message.data_type = message.data_type;
@@ -162,7 +162,7 @@ class Server {
             send_topic_to_subscribers(forward_message);
         }
 
-        void send_topic_to_subscribers(outgoing_udp_message_t& message) {
+        void send_topic_to_subscribers(message_information_t& message) {
             // find subscribers for the topic
             topic_t topic = message.message.topic;
             set<socket_fd_t> subscribers = db.get_subscribers(topic);
@@ -174,20 +174,18 @@ class Server {
             }
         }
 
-        void send_to_subscriber(socket_fd_t subscriber, outgoing_udp_message_t& message) {
+        void send_to_subscriber(socket_fd_t subscriber, message_information_t& message) {
             // send the metadata of the message as a separate struct
             message_metadata_t source;
             memset(&source, 0, sizeof(source));
+            size_t sizeof_content = content_size(message.message.content, message.message.data_type);
 
             memcpy(source.ip, message.ip, sizeof(source.ip));
             memcpy(&source.port, &message.port, sizeof(source.port));
             memcpy(source.topic, message.message.topic, sizeof(source.topic));
             memcpy(&source.data_type, &message.message.data_type, sizeof(source.data_type));
+            source.data_size = sizeof_content;
             send_all(subscriber, &source, sizeof(source));
-
-            // send the size of the content
-            size_t sizeof_content = content_size(message.message.content, message.message.data_type);
-            send_all(subscriber, &sizeof_content, sizeof(sizeof_content));
 
             // send the content
             send_all(subscriber, message.message.content, sizeof_content);
@@ -244,7 +242,7 @@ class Server {
             }
 
             // send confirmation to client
-            message_t response;
+            buffer_t response;
             memset(response, 0, sizeof(response));
             memcpy(response, SUBSCRIBE_REPLY, strlen(SUBSCRIBE_REPLY));
             memcpy(response + strlen(SUBSCRIBE_REPLY), message, strlen(message));
@@ -268,7 +266,7 @@ class Server {
             }
 
             // send confirmation to client
-            message_t response;
+            buffer_t response;
             memset(response, 0, sizeof(response));
             memcpy(response, UNSUBSCRIBE_REPLY, strlen(UNSUBSCRIBE_REPLY));
             memcpy(response + strlen(UNSUBSCRIBE_REPLY), message, strlen(message));
@@ -292,7 +290,7 @@ class Server {
         }
 
         void handle_stdin() {
-            message_t message;
+            buffer_t message;
             memset(message, 0, sizeof(message));
             fgets(message, sizeof(message), stdin);
 
