@@ -167,8 +167,18 @@ class Server {
 
             // send message to subscribers
             for (auto& subscriber : subscribers) {
-                send_all(subscriber, &message, sizeof(message));
+                // send_all(subscriber, &message, sizeof(message));
+                send_to_subscriber(subscriber, message);
             }
+        }
+
+        void send_to_subscriber(socket_fd_t subscriber, outgoing_udp_message_t message) {
+            source_info_t source;
+            memset(&source, 0, sizeof(source));
+
+            memcpy(source.ip, message.ip, sizeof(source.ip));
+            source.port = message.port;
+            send_all(subscriber, &source, sizeof(source));
         }
 
         void handle_data_from_client(pollfd client) {

@@ -72,6 +72,11 @@ struct __attribute__((__packed__)) outgoing_udp_message_t {
     incoming_udp_message_t message;
 };
 
+struct __attribute__((__packed__)) source_info_t {
+	ip_address_t ip;
+	port_t port;
+};
+
 // for the server, the message it outgoing
 // for the client, the message is incoming as an update to a topic
 typedef outgoing_udp_message_t update_message_t;

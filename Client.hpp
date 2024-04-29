@@ -104,18 +104,32 @@ class Client {
         }
 
         void receive_message() {
-            update_message_t message;
-            memset(&message, 0, sizeof(update_message_t));
+            // update_message_t message;
+            // memset(&message, 0, sizeof(update_message_t));
 
-            int rc = recv_all(socket_fd, &message, sizeof(update_message_t));
+            // int rc = recv_all(socket_fd, &message, sizeof(update_message_t));
+            // DIE(rc < 0, "recv");
+
+            // if (rc == 0) {
+            //     end_session = true;
+            //     return;
+            // } else {
+            //     print_message(message);
+            // }
+            source_info_t source;
+            stringstream ss;
+
+            int rc = recv_all(socket_fd, &source, sizeof(source_info_t));
             DIE(rc < 0, "recv");
 
             if (rc == 0) {
                 end_session = true;
                 return;
-            } else {
-                print_message(message);
             }
+
+            ss << source.ip << ":" << source.port << " - ";
+            cout << ss.str() << endl;
+
         }
 
         void print_message(outgoing_udp_message_t& message) {
