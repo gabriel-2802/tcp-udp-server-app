@@ -104,18 +104,6 @@ class Client {
         }
 
         void receive_message() {
-            // update_message_t message;
-            // memset(&message, 0, sizeof(update_message_t));
-
-            // int rc = recv_all(socket_fd, &message, sizeof(update_message_t));
-            // DIE(rc < 0, "recv");
-
-            // if (rc == 0) {
-            //     end_session = true;
-            //     return;
-            // } else {
-            //     print_message(message);
-            // }
             message_metadata_t source;
             stringstream ss;
 
@@ -129,20 +117,25 @@ class Client {
             }
 
             ss << source.ip << ":" << source.port << " - " << source.topic << " - ";
-            
+
+            size_t data_size;
+            DIE(recv_all(socket_fd, &data_size, sizeof(size_t)) < 0, "recv");
+
+            char *content = new char[data_size];
+            DIE(recv_all(socket_fd, content, data_size) < 0, "recv");
+            decode_content(content, ss, source.data_type);
+           
             cout << ss.str() << endl;
+            delete [] content;
 
         }
 
-        void print_message(outgoing_udp_message_t& message) {
-            stringstream ss;
-            ss << message.ip << ":" << message.port << " - " << message.message.topic << " - ";
-
-            switch (message.message.data_type) {
+        void decode_content(char * content, stringstream &ss, uint8_t data_type) {
+             switch (data_type) {
                 case INT: {
-                    uint8_t sign = message.message.content[0];
+                    uint8_t sign = content[0];
                     uint32_t num;
-                    memcpy(&num, message.message.content + 1, sizeof(uint32_t));
+                    memcpy(&num, content + 1, sizeof(uint32_t));
                     num = ntohl(num);
                     if (num == 0) {
                         ss << "INT - 0";
@@ -153,7 +146,7 @@ class Client {
                     break;
                 } case SHORT_REAL: {
                     uint16_t short_real;
-                    memcpy(&short_real, message.message.content, sizeof(uint16_t));
+                    memcpy(&short_real, content, sizeof(uint16_t));
                     short_real = ntohs(short_real);
                     double real = static_cast<double>(short_real) / 100.0;
                     if (real == 0) {
@@ -164,12 +157,12 @@ class Client {
                     ss << "SHORT_REAL - " << fixed << setprecision(2) << real;
                     break;
                 } case FLOAT: {
-                    uint8_t sign_f = message.message.content[0];
+                    uint8_t sign_f = content[0];
                     uint32_t num_f;
-                    memcpy(&num_f, message.message.content + 1, sizeof(uint32_t));
+                    memcpy(&num_f, content + 1, sizeof(uint32_t));
                     num_f = ntohl(num_f);
                     uint8_t power;
-                    memcpy(&power, message.message.content + 5, sizeof(uint8_t));
+                    memcpy(&power, content + 5, sizeof(uint8_t));
 
                     double number = static_cast<double>(num_f);
                     for (int i = 0; i < power; i++) {
@@ -180,21 +173,19 @@ class Client {
                         ss << "FLOAT - 0";
                         break;
                     }
-                    ss << "FLOAT - " << (sign_f ? "-" : "") << std::fixed << std::setprecision(power) << number;
+                    ss << "FLOAT - " << (sign_f ? "-" : "") << fixed << setprecision(power) << number;
                     break;
                 } case STRING: {
-                    ss << "STRING - " << message.message.content;
+                    ss << "STRING - " << content;
                     break;
                 } default: {
                     cerr << "Invalid data type\n";
                     return;
                 }
             }
-
-            cout << ss.str() << endl;
-
-
         }
+
+
     
     
 

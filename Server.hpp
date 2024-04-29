@@ -160,7 +160,7 @@ class Server {
             send_topic_to_subscribers(forward_message);
         }
 
-        void send_topic_to_subscribers(outgoing_udp_message_t message) {
+        void send_topic_to_subscribers(outgoing_udp_message_t& message) {
             // find subscribers for the topic
             topic_t topic = message.message.topic;
             set<socket_fd_t> subscribers = db.get_subscribers(topic);
@@ -172,16 +172,38 @@ class Server {
             }
         }
 
-        void send_to_subscriber(socket_fd_t subscriber, outgoing_udp_message_t message) {
+        void send_to_subscriber(socket_fd_t subscriber, outgoing_udp_message_t& message) {
+            // send the metadata of the message as a separate struct
             message_metadata_t source;
             memset(&source, 0, sizeof(source));
 
             memcpy(source.ip, message.ip, sizeof(source.ip));
-            source.port = message.port;
+            memcpy(&source.port, &message.port, sizeof(source.port));
             memcpy(source.topic, message.message.topic, sizeof(source.topic));
-            source.data_type = message.message.data_type;
+            memcpy(&source.data_type, &message.message.data_type, sizeof(source.data_type));
             send_all(subscriber, &source, sizeof(source));
 
+            // send the size of the content
+            size_t sizeof_content = content_size(message.message.content, message.message.data_type);
+            send_all(subscriber, &sizeof_content, sizeof(sizeof_content));
+
+            // send the content
+            send_all(subscriber, message.message.content, sizeof_content);
+        }
+
+        size_t content_size(char *content, uint8_t data_type) {
+            switch (data_type) {
+                case INT:
+                    return 5 * sizeof(uint8_t);
+                case SHORT_REAL:
+                    return 2 * sizeof(uint8_t);
+                case FLOAT:
+                    return 6 * sizeof(uint8_t);
+                case STRING:
+                    return strlen(content) * sizeof(uint8_t);
+                default:
+                    return 0;
+            }
         }
 
         void handle_data_from_client(pollfd client) {

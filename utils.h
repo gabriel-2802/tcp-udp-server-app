@@ -60,7 +60,7 @@ enum DataType : uint8_t {
 
 // avoid padding in struct
 struct __attribute__((__packed__)) incoming_udp_message_t {
-	char topic[51];
+	char topic[50];
 	uint8_t data_type;
 	char content[1501];
 };
@@ -75,7 +75,7 @@ struct __attribute__((__packed__)) outgoing_udp_message_t {
 struct __attribute__((__packed__)) message_metadata_t {
 	ip_address_t ip;
 	port_t port;
-	char topic[51];
+	char topic[50];
 	uint8_t data_type;
 };
 
